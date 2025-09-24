@@ -79,6 +79,7 @@ class Student(models.Model):
     course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=False)
     session = models.ForeignKey(Session, on_delete=models.DO_NOTHING, null=True)
 
+
     def __str__(self):
         return self.admin.last_name + ", " + self.admin.first_name
 
