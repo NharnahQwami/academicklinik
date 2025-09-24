@@ -13,6 +13,58 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 from .models import *
 
+# Add these imports at the top of your StudentViews.py
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from .models import Student, StudentResult # Assuming you have these models
+
+def export_results_pdf(request):
+    # Get the logged-in student
+    student = Student.objects.get(admin=request.user)
+    # Get the results for that student
+    results = StudentResult.objects.filter(student_id=student)
+
+    # Create the HttpResponse object with the appropriate PDF headers.
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{student.admin.first_name}_results.pdf"'
+
+    # Create the PDF object, using the response object as its "file."
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter # Get page dimensions
+
+    # --- Start writing the PDF ---
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(1 * inch, height - 1 * inch, "Academic Results")
+    
+    p.setFont("Helvetica", 12)
+    p.drawString(1 * inch, height - 1.5 * inch, f"Student Name: {student.admin.first_name} {student.admin.last_name}")
+    p.drawString(1 * inch, height - 1.7 * inch, f"Email: {student.admin.email}")
+    
+    # Draw a line
+    p.line(1 * inch, height - 2 * inch, width - 1 * inch, height - 2 * inch)
+
+    # Table Header
+    y_position = height - 2.5 * inch
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(1 * inch, y_position, "Subject")
+    p.drawString(4 * inch, y_position, "Assignment Marks")
+    p.drawString(6 * inch, y_position, "Exam Marks")
+
+    # Table Rows
+    p.setFont("Helvetica", 11)
+    for result in results:
+        y_position -= 0.3 * inch # Move down for the next line
+        p.drawString(1 * inch, y_position, result.subject_id.subject_name)
+        p.drawString(4.5 * inch, y_position, str(result.subject_assignment_marks))
+        p.drawString(6.5 * inch, y_position, str(result.subject_exam_marks))
+
+    # --- End writing the PDF ---
+    p.showPage()
+    p.save()
+
+    return response
 
 def student_home(request):
     student = get_object_or_404(Student, admin=request.user)

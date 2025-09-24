@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')  # Consider using your secret key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
 
 # ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
 ALLOWED_HOSTS = ['127.0.0.1']  # Not recommended but useful in dev mode

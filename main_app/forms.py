@@ -3,7 +3,15 @@ from django.forms.widgets import DateInput, TextInput
 
 from .models import *
 
+from django import forms
+from django.forms.widgets import DateInput, TextInput
+from .models import *
 
+class StudentForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['course', 'session', 'phone', 'guardian_name', 'guardian_phone']
+        
 class FormSettings(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FormSettings, self).__init__(*args, **kwargs)

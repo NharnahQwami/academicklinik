@@ -13,6 +13,7 @@ from django.views.generic import UpdateView
 from .forms import *
 from .models import *
 
+# Make sure to import these at the top of your views.py
 
 def admin_home(request):
     total_staff = Staff.objects.all().count()

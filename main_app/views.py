@@ -9,8 +9,105 @@ from django.views.decorators.csrf import csrf_exempt
 from .EmailBackend import EmailBackend
 from .models import Attendance, Session, Subject
 
-# Create your views here.
+import csv
+from .models import Student, StudentResult
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
 
+def get_grade(score):
+    if score >= 75:
+        return "A1"
+    elif score >= 70:
+        return "B2"
+    elif score >= 65:
+        return "B3"
+    elif score >= 60:
+        return "C4"
+    elif score >= 55:
+        return "C5"
+    elif score >= 50:
+        return "C6"
+    elif score >= 45:
+        return "D7"
+    elif score >= 40:
+        return "E8"
+    else:
+        return "F9"
+
+def export_results_pdf(request):
+    student = Student.objects.get(admin=request.user)
+    results = StudentResult.objects.filter(student_id=student)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{student.admin.first_name}_results.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(1 * inch, height - 1 * inch, "Academic Results")
+    
+    p.setFont("Helvetica", 12)
+    p.drawString(1 * inch, height - 1.5 * inch, f"Student Name: {student.admin.first_name} {student.admin.last_name}")
+    p.drawString(1 * inch, height - 1.7 * inch, f"Email: {student.admin.email}")
+    p.line(1 * inch, height - 2 * inch, width - 1 * inch, height - 2 * inch)
+
+    # Table Header
+    y_position = height - 2.5 * inch
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(1 * inch, y_position, "Subject")
+    p.drawString(3.5 * inch, y_position, "Test (40)")
+    p.drawString(4.5 * inch, y_position, "Exam (60)")
+    p.drawString(5.5 * inch, y_position, "Total (100)")
+    p.drawString(6.5 * inch, y_position, "Grade")
+
+    # Table Rows
+    p.setFont("Helvetica", 11)
+    for result in results:
+        y_position -= 0.3 * inch
+        total = result.test + result.exam
+        grade = get_grade(total)
+        p.drawString(1 * inch, y_position, str(result.subject.name))
+        p.drawString(3.5 * inch, y_position, str(result.test))
+        p.drawString(4.5 * inch, y_position, str(result.exam))
+        p.drawString(5.5 * inch, y_position, str(total))
+        p.drawString(6.5 * inch, y_position, grade)
+
+        # Add a new page if space runs out
+        if y_position < 1 * inch:
+            p.showPage()
+            y_position = height - 1 * inch
+            p.setFont("Helvetica-Bold", 12)
+            p.drawString(1 * inch, y_position, "Subject")
+            p.drawString(3.5 * inch, y_position, "Test")
+            p.drawString(4.5 * inch, y_position, "Exam")
+            p.drawString(5.5 * inch, y_position, "Total")
+            p.drawString(6.5 * inch, y_position, "Grade")
+            p.setFont("Helvetica", 11)
+
+    p.showPage()
+    p.save()
+    return response
+
+def export_students_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="students.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Course', 'Session', 'Phone', 'Guardian Name', 'Guardian Phone'])
+
+    for student in Student.objects.all():
+        writer.writerow([
+            student.id,
+            student.course.name if student.course else '',
+            student.session.start_year if student.session else '',
+            student.phone,
+            student.guardian_name,
+            student.guardian_phone
+        ])
+
+    return response
 
 def login_page(request):
     if request.user.is_authenticated:

@@ -82,6 +82,9 @@ urlpatterns = [
          hod_views.edit_course, name='edit_course'),
     path("subject/edit/<int:subject_id>",
          hod_views.edit_subject, name='edit_subject'),
+     path('export/students/csv/', views.export_students_csv, name='export_students_csv'),
+     path('export/results/pdf/', views.export_results_pdf, name='export_results_pdf'),
+
 
 
     # Staff

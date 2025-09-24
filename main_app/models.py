@@ -78,6 +78,9 @@ class Student(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.DO_NOTHING, null=True, blank=False)
     session = models.ForeignKey(Session, on_delete=models.DO_NOTHING, null=True)
+    phone = models.CharField(max_length=10, blank=True, null=True)
+    guardian_name = models.CharField(max_length=50, blank=True, null=True)
+    guardian_phone = models.CharField(max_length=10, blank=True, null=True)
 
 
     def __str__(self):

@@ -8,3 +8,4 @@ whitenoise==5.2.0
 Pillow
 requests==2.24.0
 openpyxl
+reportlab
