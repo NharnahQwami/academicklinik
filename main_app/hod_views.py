@@ -49,20 +49,21 @@ def add_staff(request):
         if form.is_valid():
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
-            address = form.cleaned_data.get('address')
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password')
             course = form.cleaned_data.get('course')
-            passport = request.FILES.get('profile_pic')
-            fs = FileSystemStorage()
-            filename = fs.save(passport.name, passport)
-            passport_url = fs.url(filename)
+            passport = request.FILES.get('profile_pic') or None
             try:
-                user = CustomUser.objects.create_user(
-                    email=email, password=password, user_type=2, first_name=first_name, last_name=last_name, profile_pic=passport_url)
+                if passport:
+                    fs = FileSystemStorage()
+                    filename = fs.save(passport.name, passport)
+                    user = CustomUser.objects.create_user(
+                        email=email, password=password, user_type=2, first_name=first_name, last_name=last_name, profile_pic=filename)
+                else:
+                    user = CustomUser.objects.create_user(
+                        email=email, password=password, user_type=2, first_name=first_name, last_name=last_name)
                 user.gender = gender
-                user.address = address
                 user.staff.course = course
                 user.save()
                 messages.success(request, "Successfully Added")
@@ -83,21 +84,22 @@ def add_student(request):
         if student_form.is_valid():
             first_name = student_form.cleaned_data.get('first_name')
             last_name = student_form.cleaned_data.get('last_name')
-            address = student_form.cleaned_data.get('address')
             email = student_form.cleaned_data.get('email')
             gender = student_form.cleaned_data.get('gender')
             password = student_form.cleaned_data.get('password')
             course = student_form.cleaned_data.get('course')
             session = student_form.cleaned_data.get('session')
-            passport = request.FILES['profile_pic']
-            fs = FileSystemStorage()
-            filename = fs.save(passport.name, passport)
-            passport_url = fs.url(filename)
+            passport = request.FILES.get('profile_pic') or None
             try:
-                user = CustomUser.objects.create_user(
-                    email=email, password=password, user_type=3, first_name=first_name, last_name=last_name, profile_pic=passport_url)
+                if passport:
+                    fs = FileSystemStorage()
+                    filename = fs.save(passport.name, passport)
+                    user = CustomUser.objects.create_user(
+                        email=email, password=password, user_type=3, first_name=first_name, last_name=last_name, profile_pic=filename)
+                else:
+                    user = CustomUser.objects.create_user(
+                        email=email, password=password, user_type=3, first_name=first_name, last_name=last_name)
                 user.gender = gender
-                user.address = address
                 user.student.session = session
                 user.student.course = course
                 user.save()
@@ -208,8 +210,6 @@ def edit_staff(request, staff_id):
         if form.is_valid():
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
-            address = form.cleaned_data.get('address')
-            username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password') or None
@@ -217,19 +217,16 @@ def edit_staff(request, staff_id):
             passport = request.FILES.get('profile_pic') or None
             try:
                 user = CustomUser.objects.get(id=staff.admin.id)
-                user.username = username
-                user.email = email
-                if password != None:
-                    user.set_password(password)
                 if passport != None:
                     fs = FileSystemStorage()
                     filename = fs.save(passport.name, passport)
-                    passport_url = fs.url(filename)
-                    user.profile_pic = passport_url
+                    user.profile_pic = filename
                 user.first_name = first_name
                 user.last_name = last_name
+                user.email = email
+                if password != None:
+                    user.set_password(password)
                 user.gender = gender
-                user.address = address
                 staff.course = course
                 user.save()
                 staff.save()
@@ -257,8 +254,6 @@ def edit_student(request, student_id):
         if form.is_valid():
             first_name = form.cleaned_data.get('first_name')
             last_name = form.cleaned_data.get('last_name')
-            address = form.cleaned_data.get('address')
-            username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password') or None
@@ -267,21 +262,18 @@ def edit_student(request, student_id):
             passport = request.FILES.get('profile_pic') or None
             try:
                 user = CustomUser.objects.get(id=student.admin.id)
-                if passport != None:
-                    fs = FileSystemStorage()
-                    filename = fs.save(passport.name, passport)
-                    passport_url = fs.url(filename)
-                    user.profile_pic = passport_url
-                user.username = username
-                user.email = email
                 if password != None:
                     user.set_password(password)
                 user.first_name = first_name
                 user.last_name = last_name
                 student.session = session
                 user.gender = gender
-                user.address = address
                 student.course = course
+                user.email = email
+                if passport != None:
+                    fs = FileSystemStorage()
+                    filename = fs.save(passport.name, passport)
+                    user.profile_pic = filename
                 user.save()
                 student.save()
                 messages.success(request, "Successfully Updated")
@@ -548,11 +540,6 @@ def admin_view_profile(request):
                 custom_user = admin.admin
                 if password != None:
                     custom_user.set_password(password)
-                if passport != None:
-                    fs = FileSystemStorage()
-                    filename = fs.save(passport.name, passport)
-                    passport_url = fs.url(filename)
-                    custom_user.profile_pic = passport_url
                 custom_user.first_name = first_name
                 custom_user.last_name = last_name
                 custom_user.save()

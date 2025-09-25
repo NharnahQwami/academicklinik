@@ -25,12 +25,11 @@ class CustomUserForm(FormSettings):
     gender = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')])
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
-    address = forms.CharField(widget=forms.Textarea)
     password = forms.CharField(widget=forms.PasswordInput)
     widget = {
         'password': forms.PasswordInput(),
     }
-    profile_pic = forms.ImageField()
+    profile_pic = forms.ImageField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(CustomUserForm, self).__init__(*args, **kwargs)
@@ -60,7 +59,7 @@ class CustomUserForm(FormSettings):
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'gender',  'password','profile_pic', 'address' ]
+        fields = ['first_name', 'last_name', 'email', 'gender',  'password','profile_pic' ]
 
 
 class StudentForm(CustomUserForm):
@@ -174,7 +173,7 @@ class StudentEditForm(CustomUserForm):
 
     class Meta(CustomUserForm.Meta):
         model = Student
-        fields = CustomUserForm.Meta.fields 
+        fields = CustomUserForm.Meta.fields + ['phone', 'guardian_name', 'guardian_phone']
 
 
 class StaffEditForm(CustomUserForm):
