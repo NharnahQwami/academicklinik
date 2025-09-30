@@ -259,32 +259,44 @@ def staff_add_result(request):
     staff = get_object_or_404(Staff, admin=request.user)
     subjects = Subject.objects.filter(staff=staff)
     sessions = Session.objects.all()
-    context = {
-        'page_title': 'Result Upload',
-        'subjects': subjects,
-        'sessions': sessions
-    }
+    context = {'page_title': 'Add Results', 'subjects': subjects, 'sessions': sessions}
+
     if request.method == 'POST':
-        try:
-            student_id = request.POST.get('student_list')
+        if 'fetch_students' in request.POST:
+            # This block is for fetching students based on subject and session
             subject_id = request.POST.get('subject')
-            test = request.POST.get('test')
-            exam = request.POST.get('exam')
-            student = get_object_or_404(Student, id=student_id)
+            session_id = request.POST.get('session')
+            if subject_id and session_id:
+                subject = get_object_or_404(Subject, id=subject_id)
+                session = get_object_or_404(Session, id=session_id)
+                students = Student.objects.filter(course=subject.course, session=session)
+                context['students'] = students
+                context['subject'] = subject
+                context['session'] = session
+        elif 'save_results' in request.POST:
+            # This block is for saving the results
+            subject_id = request.POST.get('subject_id')
+            session_id = request.POST.get('session_id')
+            student_ids = request.POST.getlist('student_ids')
             subject = get_object_or_404(Subject, id=subject_id)
+
             try:
-                data = StudentResult.objects.get(
-                    student=student, subject=subject)
-                data.exam = exam
-                data.test = test
-                data.save()
-                messages.success(request, "Scores Updated")
-            except:
-                result = StudentResult(student=student, subject=subject, test=test, exam=exam)
-                result.save()
-                messages.success(request, "Scores Saved")
-        except Exception as e:
-            messages.warning(request, "Error Occured While Processing Form")
+                for student_id in student_ids:
+                    student = get_object_or_404(Student, id=student_id)
+                    test_score = request.POST.get(f'test_{student_id}')
+                    exam_score = request.POST.get(f'exam_{student_id}')
+
+                    # Use update_or_create to handle both new and existing results
+                    StudentResult.objects.update_or_create(
+                        student=student,
+                        subject=subject,
+                        defaults={'test': test_score, 'exam': exam_score}
+                    )
+                messages.success(request, "Results saved successfully!")
+                return redirect(reverse('staff_add_result'))
+            except Exception as e:
+                messages.error(request, f"Error Occured While Processing Form: {e}")
+
     return render(request, "staff_template/staff_add_result.html", context)
 
 

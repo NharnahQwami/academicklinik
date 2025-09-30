@@ -37,3 +37,4 @@
 - [x] Code Restructure - Very Important
 - [x] Generate CSV of all students
 - [x] Students generate PDF of results
+- [x] Bulk results entry
